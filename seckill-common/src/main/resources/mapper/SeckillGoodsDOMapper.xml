@@ -48,6 +48,13 @@
     and is_deleted = 0
   </select>
 
+  <!-- 基础版：扣减秒杀库存（存在并发超卖 bug） -->
+  <update id="deductStock">
+    update t_seckill_goods
+    set seckill_stock = seckill_stock - 1
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
     delete from t_seckill_goods
     where id = #{id,jdbcType=BIGINT}
