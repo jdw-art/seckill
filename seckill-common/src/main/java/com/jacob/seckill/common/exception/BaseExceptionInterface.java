@@ -1,9 +1,9 @@
 package com.jacob.seckill.common.exception;
 
 /**
- * @author: 犬小哈
+ * @author: jacob
  * @url: www.quanxiaoha.com
- * @date: 2023-08-15 9:54
+ * @date: 2026/11/3 22:42
  * @description: 通用异常接口
  **/
 public interface BaseExceptionInterface {

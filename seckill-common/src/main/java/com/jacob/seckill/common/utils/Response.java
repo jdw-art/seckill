@@ -6,9 +6,9 @@ import lombok.Data;
 import java.io.Serializable;
 
 /**
- * @author: 犬小哈
+ * @author: jacob
  * @url: www.quanxiaoha.com
- * @date: 2023-08-11 19:50
+ * @date: 2026/11/3 22:42
  * @description: 响应参数工具类
  **/
 @Data

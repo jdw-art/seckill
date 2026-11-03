@@ -9,8 +9,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
- * @Author: 犬小哈
- * @Date: 2026/4/14 17:11
+ * @Author: jacob
+ * @Date: 2026/11/3 22:42
  * @Version: v1.0.0
  * @Description: 自定义线程池配置（用于异步任务，如发送短信验证码等场景）
  **/

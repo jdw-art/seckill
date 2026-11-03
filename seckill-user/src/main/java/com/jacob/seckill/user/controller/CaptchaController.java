@@ -17,8 +17,8 @@ import java.util.Collections;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * @Author: 犬小哈
- * @Date: 2026/4/10 18:49
+ * @Author: jacob
+ * @Date: 2026/11/3 22:42
  * @Version: v1.0.0
  * @Description: 行为验证码接口
  **/

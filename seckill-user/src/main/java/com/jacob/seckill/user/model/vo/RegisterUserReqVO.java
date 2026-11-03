@@ -8,8 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * @Author: 犬小哈
- * @Date: 2026/4/10 17:43
+ * @Author: jacob
+ * @Date: 2026/11/3 22:42
  * @Version: v1.0.0
  * @Description: 用户注册
  **/

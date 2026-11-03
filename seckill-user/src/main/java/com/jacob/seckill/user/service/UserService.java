@@ -7,8 +7,8 @@ import com.jacob.seckill.user.model.vo.RegisterUserReqVO;
 import com.jacob.seckill.user.model.vo.SendVerifyCodeReqVO;
 
 /**
- * @Author: 犬小哈
- * @Date: 2026/4/10 18:09
+ * @Author: jacob
+ * @Date: 2026/11/3 22:42
  * @Version: v1.0.0
  * @Description: 用户业务
  **/

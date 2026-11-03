@@ -19,7 +19,7 @@ class UserTests {
     @Test
     void testInsertUser() {
         userDOMapper.insert(UserDO.builder()
-                        .nickname("犬小哈")
+                        .nickname("jacob")
                         .password("123456")
                         .mobile("18019988888")
                         .status(1)

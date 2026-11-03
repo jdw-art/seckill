@@ -8,8 +8,8 @@ import org.springframework.context.annotation.Configuration;
 import cloud.tianai.captcha.resource.common.model.dto.Resource;
 
 /**
- * @Author: 犬小哈
- * @Date: 2026/4/27 20:38
+ * @Author: jacob
+ * @Date: 2026/11/3 22:42
  * @Version: v1.0.0
  * @Description: 行为验证码资源配置类
  **/

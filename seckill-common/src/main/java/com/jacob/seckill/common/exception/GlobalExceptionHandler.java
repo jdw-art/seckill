@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.util.Optional;
 
 /**
- * @author: 犬小哈
+ * @author: jacob
  * @url: www.quanxiaoha.com
- * @date: 2023-08-15 10:14
+ * @date: 2026/11/3 22:42
  * @description: 全局异常处理
  **/
 @ControllerAdvice
