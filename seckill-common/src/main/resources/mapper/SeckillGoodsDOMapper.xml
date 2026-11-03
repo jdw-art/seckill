@@ -12,14 +12,13 @@
     <result column="seckill_stock" jdbcType="INTEGER" property="seckillStock" />
     <result column="seckill_limit" jdbcType="INTEGER" property="seckillLimit" />
     <result column="sort" jdbcType="INTEGER" property="sort" />
-    <result column="version" jdbcType="INTEGER" property="version" />
     <result column="is_deleted" jdbcType="TINYINT" property="isDeleted" />
     <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
     <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
   </resultMap>
   <sql id="Base_Column_List">
     id, activity_id, goods_id, seckill_title, seckill_img, seckill_price, seckill_total, seckill_stock,
-    seckill_limit, sort, version, is_deleted, create_time, update_time
+    seckill_limit, sort, is_deleted, create_time, update_time
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
     select
@@ -48,11 +47,12 @@
     and is_deleted = 0
   </select>
 
-  <!-- 基础版：扣减秒杀库存（存在并发超卖 bug） -->
+  <!-- 扣减秒杀库存（SQL 条件判断防超卖） -->
   <update id="deductStock">
     update t_seckill_goods
     set seckill_stock = seckill_stock - 1
     where id = #{id,jdbcType=BIGINT}
+      and seckill_stock > 0
   </update>
 
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
@@ -63,12 +63,12 @@
     insert into t_seckill_goods (id, activity_id, goods_id,
       seckill_title, seckill_img, seckill_price,
       seckill_total, seckill_stock, seckill_limit,
-      sort, version, is_deleted,
+      sort, is_deleted,
       create_time, update_time)
     values (#{id,jdbcType=BIGINT}, #{activityId,jdbcType=BIGINT}, #{goodsId,jdbcType=BIGINT},
       #{seckillTitle,jdbcType=VARCHAR}, #{seckillImg,jdbcType=VARCHAR}, #{seckillPrice,jdbcType=DECIMAL},
       #{seckillTotal,jdbcType=INTEGER}, #{seckillStock,jdbcType=INTEGER}, #{seckillLimit,jdbcType=INTEGER},
-      #{sort,jdbcType=INTEGER}, #{version,jdbcType=INTEGER}, #{isDeleted,jdbcType=TINYINT},
+      #{sort,jdbcType=INTEGER}, #{isDeleted,jdbcType=TINYINT},
       #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.jacob.seckill.common.domain.dataobject.SeckillGoodsDO">
@@ -103,9 +103,6 @@
       </if>
       <if test="sort != null">
         sort,
-      </if>
-      <if test="version != null">
-        version,
       </if>
       <if test="isDeleted != null">
         is_deleted,
@@ -148,9 +145,6 @@
       <if test="sort != null">
         #{sort,jdbcType=INTEGER},
       </if>
-      <if test="version != null">
-        #{version,jdbcType=INTEGER},
-      </if>
       <if test="isDeleted != null">
         #{isDeleted,jdbcType=TINYINT},
       </if>
@@ -192,9 +186,6 @@
       <if test="sort != null">
         sort = #{sort,jdbcType=INTEGER},
       </if>
-      <if test="version != null">
-        version = #{version,jdbcType=INTEGER},
-      </if>
       <if test="isDeleted != null">
         is_deleted = #{isDeleted,jdbcType=TINYINT},
       </if>
@@ -218,7 +209,6 @@
       seckill_stock = #{seckillStock,jdbcType=INTEGER},
       seckill_limit = #{seckillLimit,jdbcType=INTEGER},
       sort = #{sort,jdbcType=INTEGER},
-      version = #{version,jdbcType=INTEGER},
       is_deleted = #{isDeleted,jdbcType=TINYINT},
       create_time = #{createTime,jdbcType=TIMESTAMP},
       update_time = #{updateTime,jdbcType=TIMESTAMP}
