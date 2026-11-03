@@ -55,6 +55,23 @@
       and seckill_stock > 0
   </update>
 
+  <!-- 根据活动 ID 查询秒杀商品库存（仅查询 id 和库存字段，用于缓存命中后实时补充库存） -->
+  <select id="selectStockByActivityId" resultMap="BaseResultMap">
+    select id, seckill_stock
+    from t_seckill_goods
+    where activity_id = #{activityId,jdbcType=BIGINT}
+    and is_deleted = 0
+  </select>
+
+  <!-- 根据活动 ID 和商品 ID 查询秒杀商品库存 -->
+  <select id="selectStockByActivityIdAndGoodsId" resultMap="BaseResultMap">
+    select id, seckill_stock
+    from t_seckill_goods
+    where activity_id = #{activityId,jdbcType=BIGINT}
+      and goods_id = #{goodsId,jdbcType=BIGINT}
+      and is_deleted = 0
+  </select>
+
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
     delete from t_seckill_goods
     where id = #{id,jdbcType=BIGINT}

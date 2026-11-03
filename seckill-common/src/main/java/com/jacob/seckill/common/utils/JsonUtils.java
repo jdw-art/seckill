@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.SneakyThrows;
 
+import java.util.List;
+
 /**
  * @author: jacob
  * @url: www.quanxiaoha.com
@@ -39,6 +41,33 @@ public class JsonUtils {
     @SneakyThrows
     public static String toJsonString(Object obj) {
        return OBJECT_MAPPER.writeValueAsString(obj);
+    }
+
+    /**
+     * 将 JSON 字符串转换为指定类型的集合
+     *
+     * @param json
+     * @param clazz
+     * @return
+     * @param <T>
+     */
+    @SneakyThrows
+    public static <T> List<T> parseArray(String json, Class<T> clazz) {
+        return OBJECT_MAPPER.readValue(json,
+                OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, clazz));
+    }
+
+    /**
+     * 将 JSON 字符串转换为指定类型的对象
+     *
+     * @param json
+     * @param clazz
+     * @return
+     * @param <T>
+     */
+    @SneakyThrows
+    public static <T> T parseObject(String json, Class<T> clazz) {
+        return OBJECT_MAPPER.readValue(json, clazz);
     }
 
 }
