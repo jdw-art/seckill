@@ -2,15 +2,21 @@ package com.jacob.seckill.goods.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.jacob.seckill.common.domain.dataobject.GoodsDO;
+import com.jacob.seckill.common.domain.dataobject.GoodsDetailDO;
+import com.jacob.seckill.common.domain.dataobject.GoodsImgDO;
 import com.jacob.seckill.common.domain.dataobject.SeckillActivityDO;
 import com.jacob.seckill.common.domain.dataobject.SeckillGoodsDO;
 import com.jacob.seckill.common.domain.mapper.GoodsDOMapper;
+import com.jacob.seckill.common.domain.mapper.GoodsDetailDOMapper;
+import com.jacob.seckill.common.domain.mapper.GoodsImgDOMapper;
 import com.jacob.seckill.common.domain.mapper.SeckillActivityDOMapper;
 import com.jacob.seckill.common.domain.mapper.SeckillGoodsDOMapper;
 import com.jacob.seckill.common.enums.ActivityStatusEnum;
 import com.jacob.seckill.common.enums.ResponseCodeEnum;
 import com.jacob.seckill.common.exception.BizException;
 import com.jacob.seckill.common.utils.Response;
+import com.jacob.seckill.goods.model.vo.FindSeckillGoodsDetailReqVO;
+import com.jacob.seckill.goods.model.vo.FindSeckillGoodsDetailRspVO;
 import com.jacob.seckill.goods.model.vo.FindSeckillGoodsListReqVO;
 import com.jacob.seckill.goods.model.vo.FindSeckillGoodsListRspVO;
 import com.jacob.seckill.goods.service.GoodsService;
@@ -40,6 +46,12 @@ public class GoodsServiceImpl implements GoodsService {
 
     @Resource
     private GoodsDOMapper goodsDOMapper;
+
+    @Resource
+    private GoodsImgDOMapper goodsImgDOMapper;
+
+    @Resource
+    private GoodsDetailDOMapper goodsDetailDOMapper;
 
     /**
      * 查询秒杀商品列表
@@ -86,6 +98,7 @@ public class GoodsServiceImpl implements GoodsService {
         for (SeckillGoodsDO seckillGoodsDO : seckillGoodsDOS) {
             FindSeckillGoodsListRspVO rspVO = new FindSeckillGoodsListRspVO();
             rspVO.setId(seckillGoodsDO.getId());
+            rspVO.setGoodsId(seckillGoodsDO.getGoodsId());  // 设置商品 ID
             rspVO.setActivityId(seckillGoodsDO.getActivityId());
             rspVO.setSeckillTitle(seckillGoodsDO.getSeckillTitle());
             rspVO.setSeckillImg(seckillGoodsDO.getSeckillImg());
@@ -106,6 +119,79 @@ public class GoodsServiceImpl implements GoodsService {
         }
 
         return Response.success(rspVOS);
+    }
+
+    /**
+     * 查询秒杀商品详情
+     *
+     * @param reqVO
+     * @return
+     */
+    @Override
+    public Response<FindSeckillGoodsDetailRspVO> findSeckillGoodsDetail(FindSeckillGoodsDetailReqVO reqVO) {
+        // 商品 ID
+        Long goodsId = reqVO.getGoodsId();
+        // 活动 ID
+        Long activityId = reqVO.getActivityId();
+        log.info("==> 查询秒杀商品详情, goodsId: {}, activityId: {}", goodsId, activityId);
+
+        // 1. 根据活动 ID 查询活动信息，校验活动是否存在
+        SeckillActivityDO activityDO = seckillActivityDOMapper.selectByPrimaryKey(activityId);
+        if (Objects.isNull(activityDO)) {
+            throw new BizException(ResponseCodeEnum.SECKILL_ACTIVITY_NOT_EXIST);
+        }
+
+        // 2. 根据活动 ID 和商品 ID 查询秒杀商品
+        SeckillGoodsDO seckillGoodsDO = seckillGoodsDOMapper.selectByActivityIdAndGoodsId(activityId, goodsId);
+        if (Objects.isNull(seckillGoodsDO)) {
+            throw new BizException(ResponseCodeEnum.SECKILL_GOODS_NOT_EXIST);
+        }
+
+        // 3. 根据 goodsId 查询商品基本信息, 如商品名称、原价
+        GoodsDO goodsDO = goodsDOMapper.selectByPrimaryKey(goodsId);
+
+        // 4. 根据 goodsId 查询商品轮播图列表
+        List<GoodsImgDO> goodsImgDOS = goodsImgDOMapper.selectByGoodsId(goodsId);
+
+        List<String> goodsImgs = null;
+        if (CollUtil.isNotEmpty(goodsImgDOS)) {
+            goodsImgs = goodsImgDOS.stream()
+                    .map(GoodsImgDO::getImgUrl)
+                    .toList();
+        }
+
+        // 5. 根据 goodsId 查询商品详情 HTML
+        GoodsDetailDO goodsDetailDO = goodsDetailDOMapper.selectByGoodsId(goodsId);
+
+        // 6. 计算活动状态
+        ActivityStatusEnum activityStatusEnum = calculateActivityStatus(activityDO);
+
+        // 7. 组装响应数据
+        FindSeckillGoodsDetailRspVO rspVO = FindSeckillGoodsDetailRspVO.builder()
+                .id(seckillGoodsDO.getId())
+                .goodsId(goodsId)
+                .activityId(seckillGoodsDO.getActivityId())
+                .seckillPrice(seckillGoodsDO.getSeckillPrice())
+                .seckillTotal(seckillGoodsDO.getSeckillTotal())
+                .seckillStock(seckillGoodsDO.getSeckillStock())
+                .activityStatus(activityStatusEnum.getStatus())
+                .beginTime(activityDO.getBeginTime())
+                .endTime(activityDO.getEndTime())
+                .goodsImgs(goodsImgs)
+                .build();
+
+        // 设置商品基本信息
+        if (Objects.nonNull(goodsDO)) {
+            rspVO.setGoodsName(goodsDO.getGoodsName());
+            rspVO.setGoodsPrice(goodsDO.getGoodsPrice());
+        }
+
+        // 设置商品详情 HTML
+        if (Objects.nonNull(goodsDetailDO)) {
+            rspVO.setGoodsDetail(goodsDetailDO.getDetailContent());
+        }
+
+        return Response.success(rspVO);
     }
 
     /**

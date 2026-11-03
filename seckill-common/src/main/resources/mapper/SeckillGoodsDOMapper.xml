@@ -38,6 +38,16 @@
     order by sort asc
   </select>
 
+  <!-- 根据活动 ID 和商品 ID 查询秒杀商品（排除已软删除的） -->
+  <select id="selectByActivityIdAndGoodsId" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from t_seckill_goods
+    where activity_id = #{activityId,jdbcType=BIGINT}
+    and goods_id = #{goodsId,jdbcType=BIGINT}
+    and is_deleted = 0
+  </select>
+
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
     delete from t_seckill_goods
     where id = #{id,jdbcType=BIGINT}

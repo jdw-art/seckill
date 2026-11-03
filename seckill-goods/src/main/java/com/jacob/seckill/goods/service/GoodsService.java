@@ -1,6 +1,8 @@
 package com.jacob.seckill.goods.service;
 
 import com.jacob.seckill.common.utils.Response;
+import com.jacob.seckill.goods.model.vo.FindSeckillGoodsDetailReqVO;
+import com.jacob.seckill.goods.model.vo.FindSeckillGoodsDetailRspVO;
 import com.jacob.seckill.goods.model.vo.FindSeckillGoodsListReqVO;
 import com.jacob.seckill.goods.model.vo.FindSeckillGoodsListRspVO;
 
@@ -21,4 +23,12 @@ public interface GoodsService {
      * @return
      */
     Response<List<FindSeckillGoodsListRspVO>> findSeckillGoodsList(FindSeckillGoodsListReqVO reqVO);
+
+    /**
+     * 查询秒杀商品详情
+     *
+     * @param reqVO
+     * @return
+     */
+    Response<FindSeckillGoodsDetailRspVO> findSeckillGoodsDetail(FindSeckillGoodsDetailReqVO reqVO);
 }

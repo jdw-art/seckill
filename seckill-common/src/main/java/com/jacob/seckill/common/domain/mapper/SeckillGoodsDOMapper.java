@@ -25,4 +25,14 @@ public interface SeckillGoodsDOMapper {
      * @return
      */
     List<SeckillGoodsDO> selectByActivityId(@Param("activityId") Long activityId);
+
+    /**
+     * 根据活动 ID 和商品 ID 查询秒杀商品
+     *
+     * @param activityId
+     * @param goodsId
+     * @return
+     */
+    SeckillGoodsDO selectByActivityIdAndGoodsId(@Param("activityId") Long activityId,
+                                                @Param("goodsId") Long goodsId);
 }
