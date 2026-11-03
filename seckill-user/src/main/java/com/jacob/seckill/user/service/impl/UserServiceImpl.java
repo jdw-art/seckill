@@ -235,20 +235,20 @@ public class UserServiceImpl implements UserService {
         String mobile = sendVerifyCodeReqVO.getMobile();
         Integer type = sendVerifyCodeReqVO.getType();
 
-        // // 行为验证码二次校验
-        String captchaId = sendVerifyCodeReqVO.getCaptchaId();
-        if (StrUtil.isBlank(captchaId)) {
-            throw new BizException(ResponseCodeEnum.CAPTCHA_VERIFICATION_FAILED);
-        }
+        // // // 行为验证码二次校验
+        // String captchaId = sendVerifyCodeReqVO.getCaptchaId();
+        // if (StrUtil.isBlank(captchaId)) {
+        //     throw new BizException(ResponseCodeEnum.CAPTCHA_VERIFICATION_FAILED);
+        // }
 
-        // 判断 ImageCaptchaApplication 是否支持二次校验
-        boolean verified = false;
-        if (imageCaptchaApplication instanceof SecondaryVerificationApplication) {
-            verified = ((SecondaryVerificationApplication) imageCaptchaApplication).secondaryVerification(captchaId);
-        }
-        if (!verified) {
-            throw new BizException(ResponseCodeEnum.CAPTCHA_VERIFICATION_FAILED);
-        }
+        // // 判断 ImageCaptchaApplication 是否支持二次校验
+        // boolean verified = false;
+        // if (imageCaptchaApplication instanceof SecondaryVerificationApplication) {
+        //     verified = ((SecondaryVerificationApplication) imageCaptchaApplication).secondaryVerification(captchaId);
+        // }
+        // if (!verified) {
+        //     throw new BizException(ResponseCodeEnum.CAPTCHA_VERIFICATION_FAILED);
+        // }
 
         // 判断验证码类型是否合法
         VerifyCodeTypeEnum verifyCodeType = VerifyCodeTypeEnum.valueOf(type);

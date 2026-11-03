@@ -36,7 +36,7 @@ public class SendVerifyCodeReqVO {
     /**
      * 行为验证码校验 ID（前端完成滑块验证后，由 /captcha/check 接口返回）
      */
-    @NotBlank(message = "行为验证码校验 ID 不能为空")
+    // @NotBlank(message = "行为验证码校验 ID 不能为空")
     private String captchaId;
 
 }
