@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jacob.seckill.common.domain.mapper.SeckillGoodsDOMapper">
+  <resultMap id="BaseResultMap" type="com.jacob.seckill.common.domain.dataobject.SeckillGoodsDO">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="activity_id" jdbcType="BIGINT" property="activityId" />
+    <result column="goods_id" jdbcType="BIGINT" property="goodsId" />
+    <result column="seckill_title" jdbcType="VARCHAR" property="seckillTitle" />
+    <result column="seckill_img" jdbcType="VARCHAR" property="seckillImg" />
+    <result column="seckill_price" jdbcType="DECIMAL" property="seckillPrice" />
+    <result column="seckill_total" jdbcType="INTEGER" property="seckillTotal" />
+    <result column="seckill_stock" jdbcType="INTEGER" property="seckillStock" />
+    <result column="seckill_limit" jdbcType="INTEGER" property="seckillLimit" />
+    <result column="sort" jdbcType="INTEGER" property="sort" />
+    <result column="version" jdbcType="INTEGER" property="version" />
+    <result column="is_deleted" jdbcType="TINYINT" property="isDeleted" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, activity_id, goods_id, seckill_title, seckill_img, seckill_price, seckill_total, seckill_stock,
+    seckill_limit, sort, version, is_deleted, create_time, update_time
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from t_seckill_goods
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+
+  <!-- 根据活动 ID 查询秒杀商品列表（按 sort 排序，排除掉已软删除的） -->
+  <select id="selectByActivityId" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from t_seckill_goods
+    where activity_id = #{activityId,jdbcType=BIGINT}
+    and is_deleted = 0
+    order by sort asc
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from t_seckill_goods
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" parameterType="com.jacob.seckill.common.domain.dataobject.SeckillGoodsDO">
+    insert into t_seckill_goods (id, activity_id, goods_id,
+      seckill_title, seckill_img, seckill_price,
+      seckill_total, seckill_stock, seckill_limit,
+      sort, version, is_deleted,
+      create_time, update_time)
+    values (#{id,jdbcType=BIGINT}, #{activityId,jdbcType=BIGINT}, #{goodsId,jdbcType=BIGINT},
+      #{seckillTitle,jdbcType=VARCHAR}, #{seckillImg,jdbcType=VARCHAR}, #{seckillPrice,jdbcType=DECIMAL},
+      #{seckillTotal,jdbcType=INTEGER}, #{seckillStock,jdbcType=INTEGER}, #{seckillLimit,jdbcType=INTEGER},
+      #{sort,jdbcType=INTEGER}, #{version,jdbcType=INTEGER}, #{isDeleted,jdbcType=TINYINT},
+      #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" parameterType="com.jacob.seckill.common.domain.dataobject.SeckillGoodsDO">
+    insert into t_seckill_goods
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="activityId != null">
+        activity_id,
+      </if>
+      <if test="goodsId != null">
+        goods_id,
+      </if>
+      <if test="seckillTitle != null">
+        seckill_title,
+      </if>
+      <if test="seckillImg != null">
+        seckill_img,
+      </if>
+      <if test="seckillPrice != null">
+        seckill_price,
+      </if>
+      <if test="seckillTotal != null">
+        seckill_total,
+      </if>
+      <if test="seckillStock != null">
+        seckill_stock,
+      </if>
+      <if test="seckillLimit != null">
+        seckill_limit,
+      </if>
+      <if test="sort != null">
+        sort,
+      </if>
+      <if test="version != null">
+        version,
+      </if>
+      <if test="isDeleted != null">
+        is_deleted,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="activityId != null">
+        #{activityId,jdbcType=BIGINT},
+      </if>
+      <if test="goodsId != null">
+        #{goodsId,jdbcType=BIGINT},
+      </if>
+      <if test="seckillTitle != null">
+        #{seckillTitle,jdbcType=VARCHAR},
+      </if>
+      <if test="seckillImg != null">
+        #{seckillImg,jdbcType=VARCHAR},
+      </if>
+      <if test="seckillPrice != null">
+        #{seckillPrice,jdbcType=DECIMAL},
+      </if>
+      <if test="seckillTotal != null">
+        #{seckillTotal,jdbcType=INTEGER},
+      </if>
+      <if test="seckillStock != null">
+        #{seckillStock,jdbcType=INTEGER},
+      </if>
+      <if test="seckillLimit != null">
+        #{seckillLimit,jdbcType=INTEGER},
+      </if>
+      <if test="sort != null">
+        #{sort,jdbcType=INTEGER},
+      </if>
+      <if test="version != null">
+        #{version,jdbcType=INTEGER},
+      </if>
+      <if test="isDeleted != null">
+        #{isDeleted,jdbcType=TINYINT},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.jacob.seckill.common.domain.dataobject.SeckillGoodsDO">
+    update t_seckill_goods
+    <set>
+      <if test="activityId != null">
+        activity_id = #{activityId,jdbcType=BIGINT},
+      </if>
+      <if test="goodsId != null">
+        goods_id = #{goodsId,jdbcType=BIGINT},
+      </if>
+      <if test="seckillTitle != null">
+        seckill_title = #{seckillTitle,jdbcType=VARCHAR},
+      </if>
+      <if test="seckillImg != null">
+        seckill_img = #{seckillImg,jdbcType=VARCHAR},
+      </if>
+      <if test="seckillPrice != null">
+        seckill_price = #{seckillPrice,jdbcType=DECIMAL},
+      </if>
+      <if test="seckillTotal != null">
+        seckill_total = #{seckillTotal,jdbcType=INTEGER},
+      </if>
+      <if test="seckillStock != null">
+        seckill_stock = #{seckillStock,jdbcType=INTEGER},
+      </if>
+      <if test="seckillLimit != null">
+        seckill_limit = #{seckillLimit,jdbcType=INTEGER},
+      </if>
+      <if test="sort != null">
+        sort = #{sort,jdbcType=INTEGER},
+      </if>
+      <if test="version != null">
+        version = #{version,jdbcType=INTEGER},
+      </if>
+      <if test="isDeleted != null">
+        is_deleted = #{isDeleted,jdbcType=TINYINT},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.jacob.seckill.common.domain.dataobject.SeckillGoodsDO">
+    update t_seckill_goods
+    set activity_id = #{activityId,jdbcType=BIGINT},
+      goods_id = #{goodsId,jdbcType=BIGINT},
+      seckill_title = #{seckillTitle,jdbcType=VARCHAR},
+      seckill_img = #{seckillImg,jdbcType=VARCHAR},
+      seckill_price = #{seckillPrice,jdbcType=DECIMAL},
+      seckill_total = #{seckillTotal,jdbcType=INTEGER},
+      seckill_stock = #{seckillStock,jdbcType=INTEGER},
+      seckill_limit = #{seckillLimit,jdbcType=INTEGER},
+      sort = #{sort,jdbcType=INTEGER},
+      version = #{version,jdbcType=INTEGER},
+      is_deleted = #{isDeleted,jdbcType=TINYINT},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      update_time = #{updateTime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>
