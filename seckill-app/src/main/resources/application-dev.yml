@@ -68,6 +68,13 @@ spring:
     virtual-host: /seckill
     # 连接超时时间（毫秒）
     connection-timeout: 15000
+    # 开启生产者 Confirm，消息到达交换机后回调确认
+    publisher-confirm-type: correlated
+    # 开启 Return，消息无法路由到队列时回调退回
+    publisher-returns: true
+    template:
+      # 配合 Return 使用，无法路由时不静默丢弃消息
+      mandatory: true
     # 消费者监听器配置
     listener:
       simple:

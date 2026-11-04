@@ -4,6 +4,8 @@ import com.jacob.seckill.common.utils.Response;
 import com.jacob.seckill.order.model.dto.SeckillOrderMqDTO;
 import com.jacob.seckill.order.model.vo.DoSeckillReqVO;
 import com.jacob.seckill.order.model.vo.DoSeckillRspVO;
+import com.jacob.seckill.order.model.vo.FindSeckillOrderResultReqVO;
+import com.jacob.seckill.order.model.vo.FindSeckillOrderResultRspVO;
 
 /**
  * @Author: jacob
@@ -27,4 +29,12 @@ public interface OrderService {
      * @param message
      */
     void createSeckillOrder(SeckillOrderMqDTO message);
+
+    /**
+     * 查询秒杀订单处理结果
+     *
+     * @param reqVO
+     * @return
+     */
+    Response<FindSeckillOrderResultRspVO> findSeckillOrderResult(FindSeckillOrderResultReqVO reqVO);
 }
