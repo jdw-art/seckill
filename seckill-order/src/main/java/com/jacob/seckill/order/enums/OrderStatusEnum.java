@@ -13,6 +13,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum OrderStatusEnum {
 
+    PROCESSING(-1, "处理中"),
     PENDING_PAYMENT(0, "待支付"),
     PENDING_SHIPMENT(1, "待发货"),
     SHIPPED(2, "已发货"),

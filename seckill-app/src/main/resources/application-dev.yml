@@ -54,6 +54,27 @@ spring:
           min-idle: 5
           # 连接池最大阻塞等待时间（毫秒），-1 表示无限制
           max-wait: 3000
+  # RabbitMQ 配置
+  rabbitmq:
+    # RabbitMQ 服务器地址
+    host: 192.168.31.132
+    # AMQP 协议端口（管理后台是 15672，注意区分）
+    port: 5672
+    # 用户名：从环境变量读取，勿写死在仓库里
+    username: ${RABBITMQ_USERNAME}
+    # 密码：从环境变量读取，勿写死在仓库里
+    password: ${RABBITMQ_PASSWORD}
+    # 虚拟主机，用于业务隔离
+    virtual-host: /seckill
+    # 连接超时时间（毫秒）
+    connection-timeout: 15000
+    # 消费者监听器配置
+    listener:
+      simple:
+        # 手动 ACK，消费者处理成功后再确认消息
+        acknowledge-mode: manual
+        # 每个消费者最多持有 5 条未 ack 消息
+        prefetch: 5
 
 # MyBatis 开发环境专属配置
 mybatis:

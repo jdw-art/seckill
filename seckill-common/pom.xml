@@ -140,6 +140,12 @@
             <artifactId>caffeine</artifactId>
         </dependency>
 
+        <!-- Spring Boot AMQP（整合 RabbitMQ） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

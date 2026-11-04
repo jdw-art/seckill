@@ -5,9 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-
 /**
  * @Author: jacob
  * @Date: 2026/11/3 22:52
@@ -21,37 +18,12 @@ import java.time.LocalDateTime;
 public class DoSeckillRspVO {
 
     /**
-     * 订单 ID
-     */
-    private Long orderId;
-
-    /**
      * 订单号
      */
     private String orderNo;
 
     /**
-     * 商品名称
-     */
-    private String goodsName;
-
-    /**
-     * 商品图片
-     */
-    private String goodsImg;
-
-    /**
-     * 秒杀价格
-     */
-    private BigDecimal seckillPrice;
-
-    /**
-     * 订单状态：0=待支付
+     * 订单状态：-1=处理中（不落库，真实状态由消费者写入）
      */
     private Integer status;
-
-    /**
-     * 订单过期时间
-     */
-    private LocalDateTime expireTime;
 }
