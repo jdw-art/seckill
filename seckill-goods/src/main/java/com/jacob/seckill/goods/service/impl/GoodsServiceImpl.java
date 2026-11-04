@@ -17,6 +17,7 @@ import com.jacob.seckill.common.domain.mapper.SeckillGoodsDOMapper;
 import com.jacob.seckill.common.enums.ActivityStatusEnum;
 import com.jacob.seckill.common.enums.ResponseCodeEnum;
 import com.jacob.seckill.common.exception.BizException;
+import com.jacob.seckill.common.model.dto.SeckillActivityGoodsMetaDTO;
 import com.jacob.seckill.common.utils.JsonUtils;
 import com.jacob.seckill.common.utils.Response;
 import com.jacob.seckill.goods.model.vo.FindSeckillGoodsDetailReqVO;
@@ -228,11 +229,17 @@ public class GoodsServiceImpl implements GoodsService {
             throw new BizException(ResponseCodeEnum.SECKILL_ACTIVITY_NOT_EXIST);
         }
 
-        // 2. 计算动态缓存 TTL 过期时间
-        Long ttlSeconds = RedisKeyConstants.calculateTtlSeconds(activityDO.getEndTime());
-        if (Objects.isNull(ttlSeconds) || ttlSeconds <= 0) {
+        // 2. 校验活动是否已结束
+        LocalDateTime endTime = activityDO.getEndTime();
+        if (Objects.isNull(endTime) || !LocalDateTime.now().isBefore(endTime)) {
             log.info("==> 预热跳过：活动已结束, activityId: {}", activityId);
             throw new BizException(ResponseCodeEnum.SECKILL_ACTIVITY_ENDED);
+        }
+
+        // 3. 计算动态缓存 TTL 过期时间
+        Long ttlSeconds = RedisKeyConstants.calculateTtlSeconds(endTime);
+        if (Objects.isNull(ttlSeconds) || ttlSeconds <= 0) {
+            throw new IllegalStateException("秒杀活动缓存 TTL 计算失败");
         }
 
         // 3. 查询该活动下所有秒杀商品
@@ -360,6 +367,35 @@ public class GoodsServiceImpl implements GoodsService {
         }
 
         log.info("==> 预热活动 {} 的 {} 个商品详情缓存完成", activityId, seckillGoodsDOS.size());
+
+        // 7. 预热秒杀库存
+        for (SeckillGoodsDO seckillGoodsDO : seckillGoodsDOS) {
+            String stockKey = RedisKeyConstants.buildSeckillStockKey(activityId, seckillGoodsDO.getGoodsId());
+            stringRedisTemplate.opsForValue().set(stockKey, String.valueOf(seckillGoodsDO.getSeckillStock()),
+                    ttlSeconds, TimeUnit.SECONDS);
+
+            log.info("==> 预热秒杀库存成功, key: {}, stock: {}, TTL: {}s",
+                    stockKey, seckillGoodsDO.getSeckillStock(), ttlSeconds);
+        }
+
+        // 8. 预热秒杀活动商品元数据，供下单入口直接从 Redis 读取
+        for (SeckillGoodsDO seckillGoodsDO : seckillGoodsDOS) {
+            String metaKey = RedisKeyConstants.buildSeckillActivityGoodsMetaKey(activityId, seckillGoodsDO.getGoodsId());
+
+            SeckillActivityGoodsMetaDTO metaDTO = SeckillActivityGoodsMetaDTO.builder()
+                    .seckillGoodsId(seckillGoodsDO.getId())
+                    .activityId(activityId)
+                    .goodsId(seckillGoodsDO.getGoodsId())
+                    .seckillPrice(seckillGoodsDO.getSeckillPrice())
+                    .beginTime(activityDO.getBeginTime())
+                    .endTime(activityDO.getEndTime())
+                    .build();
+
+            stringRedisTemplate.opsForValue().set(metaKey, JsonUtils.toJsonString(metaDTO),
+                    ttlSeconds, TimeUnit.SECONDS);
+
+            log.info("==> 预热秒杀活动商品元数据成功, key: {}, TTL: {}s", metaKey, ttlSeconds);
+        }
 
         return Response.success();
     }
