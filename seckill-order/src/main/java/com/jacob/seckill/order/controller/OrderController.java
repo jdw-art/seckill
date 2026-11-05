@@ -3,6 +3,7 @@ package com.jacob.seckill.order.controller;
 import cn.dev33.satoken.stp.StpUtil;
 import com.jacob.seckill.common.aspect.ApiOperationLog;
 import com.jacob.seckill.common.utils.Response;
+import com.jacob.seckill.order.aspect.SeckillRateLimit;
 import com.jacob.seckill.order.model.vo.DoSeckillReqVO;
 import com.jacob.seckill.order.model.vo.DoSeckillRspVO;
 import com.jacob.seckill.order.model.vo.FindSeckillOrderResultReqVO;
@@ -45,6 +46,7 @@ public class OrderController {
      */
     @PostMapping
     @ApiOperationLog(description = "秒杀下单")
+    @SeckillRateLimit(userMaxCount = 5, userWindowSeconds = 10, ipMaxCount = 50, ipWindowSeconds = 10)
     public Response<DoSeckillRspVO> doSeckill(@RequestBody @Validated DoSeckillReqVO reqVO) {
         return orderService.doSeckill(reqVO);
     }

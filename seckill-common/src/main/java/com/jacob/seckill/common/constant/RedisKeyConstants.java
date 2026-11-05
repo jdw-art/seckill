@@ -126,6 +126,30 @@ public class RedisKeyConstants {
     }
 
     /**
+     * 秒杀用户维度限流 Key 前缀
+     */
+    public static final String SECKILL_RATE_LIMIT_USER_PREFIX = "seckill:rate:user:";
+
+    /**
+     * 秒杀 IP 维度限流 Key 前缀
+     */
+    public static final String SECKILL_RATE_LIMIT_IP_PREFIX = "seckill:rate:ip:";
+
+    /**
+     * 构建秒杀用户维度限流 Key
+     */
+    public static String buildSeckillRateLimitUserKey(Long activityId, Long goodsId, Long userId) {
+        return SECKILL_RATE_LIMIT_USER_PREFIX + activityId + ":" + goodsId + ":" + userId;
+    }
+
+    /**
+     * 构建秒杀 IP 维度限流 Key
+     */
+    public static String buildSeckillRateLimitIpKey(Long activityId, Long goodsId, String clientIp) {
+        return SECKILL_RATE_LIMIT_IP_PREFIX + activityId + ":" + goodsId + ":" + clientIp;
+    }
+
+    /**
      * 秒杀订单待回补上下文 Key 前缀
      *
      * 完整格式：seckill:order:compensation:{orderNo}
