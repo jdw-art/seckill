@@ -2,6 +2,8 @@
 package com.jacob.seckill.common.aspect;
 
 import com.jacob.seckill.common.utils.JsonUtils;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -41,8 +43,11 @@ public class ApiOperationLogAspect {
 
         // 请求入参
         Object[] args = joinPoint.getArgs();
-        // 入参转 JSON 字符串
-        String argsJsonStr = Arrays.stream(args).map(toJsonStr()).collect(Collectors.joining(", "));
+        // 入参转 JSON 字符串；ServletRequest/ServletResponse 不可序列化，请求体也已被 @RequestBody 读走，必须跳过
+        String argsJsonStr = Arrays.stream(args)
+                .filter(arg -> !(arg instanceof ServletRequest) && !(arg instanceof ServletResponse))
+                .map(toJsonStr())
+                .collect(Collectors.joining(", "));
 
         // 功能描述信息
         String description = getApiOperationLogDescription(joinPoint);
