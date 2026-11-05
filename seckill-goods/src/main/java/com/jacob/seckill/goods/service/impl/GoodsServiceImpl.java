@@ -25,6 +25,7 @@ import com.jacob.seckill.goods.model.vo.FindSeckillGoodsDetailRspVO;
 import com.jacob.seckill.goods.model.vo.FindSeckillGoodsListReqVO;
 import com.jacob.seckill.goods.model.vo.FindSeckillGoodsListRspVO;
 import com.jacob.seckill.goods.service.GoodsService;
+import com.jacob.seckill.goods.utils.SeckillGoodsStockUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
@@ -188,6 +189,10 @@ public class GoodsServiceImpl implements GoodsService {
 
             rspVOS.add(rspVO);
         }
+
+        // DB 中的 seckill_stock 只是兜底值
+        // 活动期间页面展示的实时库存，仍然优先从 Redis 秒杀库存 Key 中组合
+        supplementStock(rspVOS, activityId);
 
         // 将商品列表写入 Redis 缓存和本地缓存
         log.info("==> 商品列表缓存未命中，将数据写入 Redis 和本地缓存中, Key: {}", redisKey);
@@ -423,7 +428,7 @@ public class GoodsServiceImpl implements GoodsService {
             return cachedList;
         }
 
-        // 设置库存字段值（因为库存变化频繁，需要从数据库查最新的）
+        // 设置库存字段值（从 Redis 中获取实时库存）
         supplementStock(cachedList, activityId);
 
         // 实时重新计算活动状态
@@ -448,12 +453,8 @@ public class GoodsServiceImpl implements GoodsService {
         FindSeckillGoodsDetailRspVO cachedDetail = JsonUtils
                 .parseObject(redisJsonValue, FindSeckillGoodsDetailRspVO.class);
 
-        // 设置库存字段值（因为库存变化频繁，需要从数据库查最新的）
-        SeckillGoodsDO seckillGoodsDO = seckillGoodsDOMapper
-                .selectStockByActivityIdAndGoodsId(activityId, goodsId);
-        if (Objects.nonNull(seckillGoodsDO)) {
-            cachedDetail.setSeckillStock(seckillGoodsDO.getSeckillStock());
-        }
+        // 设置库存字段值（从 Redis 中获取实时库存）
+        supplementStock(cachedDetail, activityId, goodsId);
 
         // 实时重新计算活动状态
         ActivityStatusEnum activityStatusEnum = calculateActivityStatus(
@@ -477,26 +478,53 @@ public class GoodsServiceImpl implements GoodsService {
     }
 
     /**
-     * 实时补充库存字段（库存变化频繁，每次从数据库实时查询）
+     * 实时补充库存字段（优先读取 Redis 秒杀库存 Key，避免商品缓存中的库存快照数据不实时）
      *
      * @param goodsList  缓存中的商品列表
      * @param activityId 活动 ID
      */
     private void supplementStock(List<FindSeckillGoodsListRspVO> goodsList, Long activityId) {
-        // 根据活动 ID 查询秒杀商品的实时库存（仅查 id 和 seckill_stock 字段，减少 IO 开销）
-        List<SeckillGoodsDO> seckillGoodsDOS = seckillGoodsDOMapper.selectStockByActivityId(activityId);
-
-        // 构建 ID -> 库存的映射
-        Map<Long, Integer> stockMap = seckillGoodsDOS.stream()
-                .collect(Collectors.toMap(SeckillGoodsDO::getId, SeckillGoodsDO::getSeckillStock));
-
-        // 补充库存到缓存中的商品列表
-        for (FindSeckillGoodsListRspVO rspVO : goodsList) {
-            Integer stock = stockMap.get(rspVO.getId());
-            if (Objects.nonNull(stock)) {
-                rspVO.setSeckillStock(stock);
-            }
+        if (CollUtil.isEmpty(goodsList)) {
+            return;
         }
+
+        // 批量构建秒杀库存 Key，后面用于 MGET 一次性读取库存数据
+        List<String> stockKeys = goodsList.stream()
+                .map(item -> RedisKeyConstants.buildSeckillStockKey(activityId, item.getGoodsId()))
+                .toList();
+
+        List<String> stockValues = stringRedisTemplate.opsForValue().multiGet(stockKeys);
+        for (int i = 0; i < goodsList.size(); i++) {
+            FindSeckillGoodsListRspVO rspVO = goodsList.get(i);
+            String stockValue = getValue(stockValues, i);
+            rspVO.setSeckillStock(SeckillGoodsStockUtils.resolveDisplayStock(stockValue, rspVO.getSeckillStock()));
+        }
+    }
+
+    /**
+     * 实时补充商品详情中的库存字段
+     */
+    private void supplementStock(FindSeckillGoodsDetailRspVO rspVO, Long activityId, Long goodsId) {
+        // 从 Redis 中查询库存
+        String stockKey = RedisKeyConstants.buildSeckillStockKey(activityId, goodsId);
+        String stockValue = stringRedisTemplate.opsForValue().get(stockKey);
+
+        // 对返参 VO 设置库存值
+        rspVO.setSeckillStock(SeckillGoodsStockUtils.resolveDisplayStock(stockValue, rspVO.getSeckillStock()));
+    }
+
+    /**
+     * 安全获取列表指定下标的值
+     *
+     * @param values Redis 批量查询结果
+     * @param index  下标
+     * @return 指定下标对应的值
+     */
+    private String getValue(List<String> values, int index) {
+        if (Objects.isNull(values) || index >= values.size()) {
+            return null;
+        }
+        return values.get(index);
     }
 
     /**
@@ -626,6 +654,9 @@ public class GoodsServiceImpl implements GoodsService {
         if (Objects.nonNull(goodsDetailDO)) {
             rspVO.setGoodsDetail(goodsDetailDO.getDetailContent());
         }
+
+        // 缓存未命中时，也要优先组合 Redis 实时库存，避免返回 DB 中的库存快照
+        supplementStock(rspVO, activityId, goodsId);
 
         // 将商品详情写入 Redis 缓存和本地缓存
         log.info("==> 商品详情缓存未命中，将数据写入 Redis 和本地缓存, key: {}", redisKey);
