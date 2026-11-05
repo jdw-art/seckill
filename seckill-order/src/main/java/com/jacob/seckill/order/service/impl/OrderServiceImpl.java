@@ -21,6 +21,8 @@ import com.jacob.seckill.order.model.vo.DoSeckillReqVO;
 import com.jacob.seckill.order.model.vo.DoSeckillRspVO;
 import com.jacob.seckill.order.model.vo.FindSeckillOrderResultReqVO;
 import com.jacob.seckill.order.model.vo.FindSeckillOrderResultRspVO;
+import com.jacob.seckill.order.model.vo.GetSeckillTokenReqVO;
+import com.jacob.seckill.order.model.vo.GetSeckillTokenRspVO;
 import com.jacob.seckill.order.service.OrderService;
 import com.jacob.seckill.order.service.SeckillOrderResultNotifyService;
 import com.jacob.seckill.order.service.SeckillStockService;
@@ -31,7 +33,9 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -44,6 +48,11 @@ import java.util.concurrent.TimeUnit;
 @Service
 @Slf4j
 public class OrderServiceImpl implements OrderService {
+
+    /**
+     * 秒杀令牌随机源，SecureRandom 线程安全
+     */
+    private static final SecureRandom SECKILL_TOKEN_RANDOM = new SecureRandom();
 
     @Resource
     private SeckillGoodsDOMapper seckillGoodsDOMapper;
@@ -81,6 +90,9 @@ public class OrderServiceImpl implements OrderService {
 
         // 1. 获取当前登录用户 ID
         long userId = StpUtil.getLoginIdAsLong();
+
+        // 1.1 校验秒杀令牌，拦截没有经过令牌接口的请求
+        checkSeckillToken(activityId, goodsId, userId, reqVO.getToken());
 
         // 2. 从 Redis 读取秒杀活动商品元数据，不再查数据库
         String metaKey = RedisKeyConstants.buildSeckillActivityGoodsMetaKey(activityId, goodsId);
@@ -178,6 +190,90 @@ public class OrderServiceImpl implements OrderService {
                         .status(OrderStatusEnum.PROCESSING.getStatus())
                         .build()
         );
+    }
+
+    /**
+     * 获取秒杀下单令牌
+     *
+     * @param reqVO
+     * @return
+     */
+    @Override
+    public Response<GetSeckillTokenRspVO> getSeckillToken(GetSeckillTokenReqVO reqVO) {
+        // 活动 ID
+        Long activityId = reqVO.getActivityId();
+        // 商品 ID
+        Long goodsId = reqVO.getGoodsId();
+
+        // 1. 获取当前登录用户 ID，令牌按用户维度隔离
+        long userId = StpUtil.getLoginIdAsLong();
+
+        // 2. 从 Redis 读取秒杀活动商品元数据
+        String metaKey = RedisKeyConstants.buildSeckillActivityGoodsMetaKey(activityId, goodsId);
+        String metaJson = stringRedisTemplate.opsForValue().get(metaKey);
+        if (StrUtil.isBlank(metaJson)) {
+            log.warn("==> 秒杀活动商品元数据未预热, key: {}", metaKey);
+            throw new IllegalStateException("秒杀下单入口元数据未预热，请先预热活动");
+        }
+
+        SeckillActivityGoodsMetaDTO metaDTO = JsonUtils.parseObject(metaJson, SeckillActivityGoodsMetaDTO.class);
+        if (Objects.isNull(metaDTO) || Objects.isNull(metaDTO.getBeginTime()) || Objects.isNull(metaDTO.getEndTime())) {
+            throw new IllegalStateException("秒杀活动商品元数据解析失败, key: " + metaKey);
+        }
+
+        // 3. 未开始或已结束的活动，不签发令牌
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isBefore(metaDTO.getBeginTime())) {
+            throw new BizException(ResponseCodeEnum.SECKILL_ACTIVITY_NOT_STARTED);
+        }
+
+        if (!now.isBefore(metaDTO.getEndTime())) {
+            throw new BizException(ResponseCodeEnum.SECKILL_ACTIVITY_ENDED);
+        }
+
+        // 4. 生成令牌并写入 Redis，同一用户重复获取会覆盖旧令牌
+        String token = generateSeckillToken();
+        String tokenKey = RedisKeyConstants.buildSeckillOrderTokenKey(activityId, goodsId, userId);
+        stringRedisTemplate.opsForValue().set(tokenKey, token,
+                RedisKeyConstants.SECKILL_ORDER_TOKEN_TTL_SECONDS, TimeUnit.SECONDS);
+
+        log.info("==> 秒杀令牌签发成功, userId: {}, activityId: {}, goodsId: {}", userId, activityId, goodsId);
+
+        return Response.success(
+                GetSeckillTokenRspVO.builder()
+                        .token(token)
+                        .expireSeconds(RedisKeyConstants.SECKILL_ORDER_TOKEN_TTL_SECONDS)
+                        .build()
+        );
+    }
+
+    /**
+     * 生成秒杀令牌：32 字节随机数，Base64 URL 安全编码
+     *
+     * @return
+     */
+    private String generateSeckillToken() {
+        byte[] bytes = new byte[32];
+        SECKILL_TOKEN_RANDOM.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    /**
+     * 校验秒杀令牌
+     *
+     * @param activityId
+     * @param goodsId
+     * @param userId
+     * @param token
+     */
+    private void checkSeckillToken(Long activityId, Long goodsId, Long userId, String token) {
+        String tokenKey = RedisKeyConstants.buildSeckillOrderTokenKey(activityId, goodsId, userId);
+        String cachedToken = stringRedisTemplate.opsForValue().get(tokenKey);
+
+        // 令牌不存在（已过期）或与缓存不一致，都视为无效
+        if (StrUtil.isBlank(cachedToken) || !cachedToken.equals(token)) {
+            throw new BizException(ResponseCodeEnum.SECKILL_TOKEN_INVALID);
+        }
     }
 
     /**

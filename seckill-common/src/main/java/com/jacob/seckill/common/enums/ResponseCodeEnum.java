@@ -47,6 +47,7 @@ public enum ResponseCodeEnum implements BaseExceptionInterface {
     SECKILL_ORDER_DUPLICATE("40004", "您已参与过此商品的秒杀"),
     SECKILL_ORDER_PROCESSING("40005", "您的订单正在处理中，请勿重复提交"),
     SECKILL_REQUEST_TOO_FREQUENT("40006", "请求过于频繁，请稍后再试"),
+    SECKILL_TOKEN_INVALID("40007", "秒杀令牌无效，请刷新后重试"),
     ;
 
     // 异常码

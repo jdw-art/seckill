@@ -6,6 +6,8 @@ import com.jacob.seckill.order.model.vo.DoSeckillReqVO;
 import com.jacob.seckill.order.model.vo.DoSeckillRspVO;
 import com.jacob.seckill.order.model.vo.FindSeckillOrderResultReqVO;
 import com.jacob.seckill.order.model.vo.FindSeckillOrderResultRspVO;
+import com.jacob.seckill.order.model.vo.GetSeckillTokenReqVO;
+import com.jacob.seckill.order.model.vo.GetSeckillTokenRspVO;
 
 /**
  * @Author: jacob
@@ -22,6 +24,14 @@ public interface OrderService {
      * @return
      */
     Response<DoSeckillRspVO> doSeckill(DoSeckillReqVO reqVO);
+
+    /**
+     * 获取秒杀下单令牌
+     *
+     * @param reqVO
+     * @return
+     */
+    Response<GetSeckillTokenRspVO> getSeckillToken(GetSeckillTokenReqVO reqVO);
 
     /**
      * 异步消费秒杀下单消息：扣减库存 + 创建订单

@@ -8,6 +8,8 @@ import com.jacob.seckill.order.model.vo.DoSeckillReqVO;
 import com.jacob.seckill.order.model.vo.DoSeckillRspVO;
 import com.jacob.seckill.order.model.vo.FindSeckillOrderResultReqVO;
 import com.jacob.seckill.order.model.vo.FindSeckillOrderResultRspVO;
+import com.jacob.seckill.order.model.vo.GetSeckillTokenReqVO;
+import com.jacob.seckill.order.model.vo.GetSeckillTokenRspVO;
 import com.jacob.seckill.order.model.vo.SubscribeSeckillOrderResultReqVO;
 import com.jacob.seckill.order.service.OrderService;
 import com.jacob.seckill.order.service.SeckillOrderResultNotifyService;
@@ -49,6 +51,18 @@ public class OrderController {
     @SeckillRateLimit(userMaxCount = 5, userWindowSeconds = 10, ipMaxCount = 50, ipWindowSeconds = 10)
     public Response<DoSeckillRspVO> doSeckill(@RequestBody @Validated DoSeckillReqVO reqVO) {
         return orderService.doSeckill(reqVO);
+    }
+
+    /**
+     * 获取秒杀下单令牌
+     *
+     * @param reqVO
+     * @return
+     */
+    @PostMapping("/token")
+    @ApiOperationLog(description = "获取秒杀下单令牌")
+    public Response<GetSeckillTokenRspVO> getSeckillToken(@RequestBody @Validated GetSeckillTokenReqVO reqVO) {
+        return orderService.getSeckillToken(reqVO);
     }
 
     /**

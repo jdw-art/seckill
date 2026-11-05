@@ -150,6 +150,25 @@ public class RedisKeyConstants {
     }
 
     /**
+     * 秒杀下单令牌 Key 前缀
+     *
+     * 完整格式：seckill:order:token:{activityId}:{goodsId}:{userId}
+     */
+    public static final String SECKILL_ORDER_TOKEN_PREFIX = "seckill:order:token:";
+
+    /**
+     * 秒杀下单令牌过期时间（单位：秒）
+     */
+    public static final long SECKILL_ORDER_TOKEN_TTL_SECONDS = 60;
+
+    /**
+     * 构建秒杀下单令牌 Key
+     */
+    public static String buildSeckillOrderTokenKey(Long activityId, Long goodsId, Long userId) {
+        return SECKILL_ORDER_TOKEN_PREFIX + activityId + ":" + goodsId + ":" + userId;
+    }
+
+    /**
      * 秒杀订单待回补上下文 Key 前缀
      *
      * 完整格式：seckill:order:compensation:{orderNo}
