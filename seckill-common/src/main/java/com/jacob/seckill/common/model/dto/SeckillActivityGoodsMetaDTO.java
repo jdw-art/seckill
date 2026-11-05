@@ -28,6 +28,16 @@ public class SeckillActivityGoodsMetaDTO {
 
     private BigDecimal seckillPrice;
 
+    /**
+     * 商品名称快照
+     */
+    private String goodsName;
+
+    /**
+     * 商品主图快照
+     */
+    private String goodsImg;
+
     private LocalDateTime beginTime;
 
     private LocalDateTime endTime;

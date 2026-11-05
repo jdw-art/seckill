@@ -55,4 +55,14 @@ public class SeckillOrderMqDTO {
      */
     private LocalDateTime requestTime;
 
+    /**
+     * 商品名称快照
+     */
+    private String goodsName;
+
+    /**
+     * 商品主图快照
+     */
+    private String goodsImg;
+
 }

@@ -382,10 +382,15 @@ public class GoodsServiceImpl implements GoodsService {
         for (SeckillGoodsDO seckillGoodsDO : seckillGoodsDOS) {
             String metaKey = RedisKeyConstants.buildSeckillActivityGoodsMetaKey(activityId, seckillGoodsDO.getGoodsId());
 
+            // 复用前面已批量查询到的商品信息，避免再次查库
+            GoodsDO goodsDO = goodsMap.get(seckillGoodsDO.getGoodsId());
+
             SeckillActivityGoodsMetaDTO metaDTO = SeckillActivityGoodsMetaDTO.builder()
                     .seckillGoodsId(seckillGoodsDO.getId())
                     .activityId(activityId)
                     .goodsId(seckillGoodsDO.getGoodsId())
+                    .goodsName(Objects.nonNull(goodsDO) ? goodsDO.getGoodsName() : null)
+                    .goodsImg(Objects.nonNull(goodsDO) ? goodsDO.getGoodsImg() : null)
                     .seckillPrice(seckillGoodsDO.getSeckillPrice())
                     .beginTime(activityDO.getBeginTime())
                     .endTime(activityDO.getEndTime())

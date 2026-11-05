@@ -112,6 +112,34 @@ public class RedisKeyConstants {
     }
 
     /**
+     * 秒杀商品售罄标记 Key 前缀
+     *
+     * 完整格式：seckill:soldout:{activityId}:{goodsId}
+     */
+    public static final String SECKILL_SOLD_OUT_PREFIX = "seckill:soldout:";
+
+    /**
+     * 构建秒杀商品售罄标记 Key
+     */
+    public static String buildSeckillSoldOutKey(Long activityId, Long goodsId) {
+        return SECKILL_SOLD_OUT_PREFIX + activityId + ":" + goodsId;
+    }
+
+    /**
+     * 秒杀订单待回补上下文 Key 前缀
+     *
+     * 完整格式：seckill:order:compensation:{orderNo}
+     */
+    public static final String SECKILL_ORDER_COMPENSATION_PREFIX = "seckill:order:compensation:";
+
+    /**
+     * 构建秒杀订单待回补上下文 Key
+     */
+    public static String buildSeckillOrderCompensationKey(String orderNo) {
+        return SECKILL_ORDER_COMPENSATION_PREFIX + orderNo;
+    }
+
+    /**
      * 根据活动结束时间动态计算缓存 TTL（秒）
      *
      * 公式：TTL = (活动结束时间 - 当前时间) + 安全缓冲时间
