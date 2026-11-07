@@ -24,6 +24,7 @@ import com.jacob.seckill.order.model.vo.FindSeckillOrderResultRspVO;
 import com.jacob.seckill.order.model.vo.GetSeckillTokenReqVO;
 import com.jacob.seckill.order.model.vo.GetSeckillTokenRspVO;
 import com.jacob.seckill.order.service.OrderService;
+import com.jacob.seckill.order.service.SeckillCaptchaService;
 import com.jacob.seckill.order.service.SeckillOrderResultNotifyService;
 import com.jacob.seckill.order.service.SeckillStockService;
 import jakarta.annotation.Resource;
@@ -103,6 +104,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Resource
     private SeckillOrderResultNotifyService seckillOrderResultNotifyService;
+
+    @Resource
+    private SeckillCaptchaService seckillCaptchaService;
 
     @Resource(name = "seckillOrderQueueDrainExecutor")
     private ThreadPoolTaskExecutor seckillOrderQueueDrainExecutor;
@@ -277,6 +281,9 @@ public class OrderServiceImpl implements OrderService {
 
         // 1. 获取当前登录用户 ID，令牌按用户维度隔离
         long userId = StpUtil.getLoginIdAsLong();
+
+        // 1.1 获取令牌前先校验行为验证码，避免脚本直接高频刷新 token
+        seckillCaptchaService.verify(reqVO.getCaptchaId());
 
         // 2. 从 Redis 读取秒杀活动商品元数据
         String metaKey = RedisKeyConstants.buildSeckillActivityGoodsMetaKey(activityId, goodsId);

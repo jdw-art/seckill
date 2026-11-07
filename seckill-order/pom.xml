@@ -21,5 +21,11 @@
             <groupId>com.jacob</groupId>
             <artifactId>seckill-common</artifactId>
         </dependency>
+
+        <!-- 行为验证码 -->
+        <dependency>
+            <groupId>cloud.tianai.captcha</groupId>
+            <artifactId>tianai-captcha-springboot-starter</artifactId>
+        </dependency>
     </dependencies>
 </project>
