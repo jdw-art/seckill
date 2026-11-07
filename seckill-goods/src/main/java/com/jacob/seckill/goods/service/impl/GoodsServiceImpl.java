@@ -29,6 +29,7 @@ import com.jacob.seckill.goods.utils.SeckillGoodsStockUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
+import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -232,6 +233,34 @@ public class GoodsServiceImpl implements GoodsService {
      */
     @Override
     public Response<?> preheatActivityGoods(Long activityId) {
+        // 构建分布式锁 Key
+        String lockKey = RedisKeyConstants.buildSeckillActivityPreheatLockKey();
+        // 获取分布式锁对象
+        RLock lock = redissonClient.getLock(lockKey);
+
+        // 获取锁失败，说明已有实例正在预热，直接快速失败
+        if (!lock.tryLock()) {
+            log.warn("==> 活动缓存正在预热中，本次请求跳过, activityId: {}, lockKey: {}", activityId, lockKey);
+            throw new BizException(ResponseCodeEnum.SECKILL_ACTIVITY_PREHEATING);
+        }
+
+        try {
+            return doPreheatActivityGoods(activityId);
+        } finally {
+            // 只释放当前线程持有的锁
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    /**
+     * 执行活动商品缓存预热
+     *
+     * @param activityId
+     * @return
+     */
+    private Response<?> doPreheatActivityGoods(Long activityId) {
         log.info("==> 开始预热活动商品缓存, activityId: {}", activityId);
 
         // 1. 查询活动信息（获取活动结束时间，用于计算动态 TTL）

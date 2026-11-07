@@ -53,6 +53,18 @@ public class RedisKeyConstants {
     public static final long ENDED_ACTIVITY_TTL_MINUTES = 5;
 
     /**
+     * 活动缓存预热分布式锁 Key
+     */
+    public static final String SECKILL_ACTIVITY_PREHEAT_LOCK_KEY = "seckill:lock:activity:preheat";
+
+    /**
+     * 构建活动缓存预热分布式锁 Key
+     */
+    public static String buildSeckillActivityPreheatLockKey() {
+        return SECKILL_ACTIVITY_PREHEAT_LOCK_KEY;
+    }
+
+    /**
      * 安全缓冲时间（单位：秒）
      */
     public static final long SAFETY_BUFFER_SECONDS = 30 * 60; // 30 分钟
