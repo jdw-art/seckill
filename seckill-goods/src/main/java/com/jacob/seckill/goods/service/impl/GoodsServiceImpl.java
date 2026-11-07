@@ -30,6 +30,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -47,6 +48,12 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class GoodsServiceImpl implements GoodsService {
+
+    /**
+     * 秒杀令牌大闸放大系数
+     */
+    @Value("${seckill.token-gate.multiplier}")
+    private Integer seckillTokenGateMultiplier;
 
     @Resource
     private SeckillGoodsDOMapper seckillGoodsDOMapper;
@@ -381,6 +388,15 @@ public class GoodsServiceImpl implements GoodsService {
 
             log.info("==> 预热秒杀库存成功, key: {}, stock: {}, TTL: {}s",
                     stockKey, seckillGoodsDO.getSeckillStock(), ttlSeconds);
+
+            // 预热秒杀令牌大闸：大闸令牌数量 = 秒杀库存 * 放大系数
+            String tokenGateKey = RedisKeyConstants.buildSeckillTokenGateKey(activityId, seckillGoodsDO.getGoodsId());
+            long tokenGateCount = (long) seckillGoodsDO.getSeckillStock() * seckillTokenGateMultiplier;
+            stringRedisTemplate.opsForValue().set(tokenGateKey, String.valueOf(tokenGateCount),
+                    ttlSeconds, TimeUnit.SECONDS);
+
+            log.info("==> 预热秒杀令牌大闸成功, key: {}, tokenCount: {}, multiplier: {}, TTL: {}s",
+                    tokenGateKey, tokenGateCount, seckillTokenGateMultiplier, ttlSeconds);
         }
 
         // 8. 预热秒杀活动商品元数据，供下单入口直接从 Redis 读取

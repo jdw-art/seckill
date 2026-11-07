@@ -169,6 +169,20 @@ public class RedisKeyConstants {
     }
 
     /**
+     * 秒杀令牌大闸 Key 前缀
+     *
+     * 完整格式：seckill:token:gate:{activityId}:{goodsId}
+     */
+    public static final String SECKILL_TOKEN_GATE_PREFIX = "seckill:token:gate:";
+
+    /**
+     * 构建秒杀令牌大闸 Key
+     */
+    public static String buildSeckillTokenGateKey(Long activityId, Long goodsId) {
+        return SECKILL_TOKEN_GATE_PREFIX + activityId + ":" + goodsId;
+    }
+
+    /**
      * 秒杀订单待回补上下文 Key 前缀
      *
      * 完整格式：seckill:order:compensation:{orderNo}
