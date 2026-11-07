@@ -101,3 +101,23 @@ CREATE TABLE `t_seckill_order` (
   KEY `idx_user_id` (`user_id`),
   KEY `idx_activity_id` (`activity_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='秒杀订单表';
+
+CREATE TABLE `t_seckill_order_send_compensation` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `order_no` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '订单号',
+  `user_id` bigint unsigned NOT NULL COMMENT '用户ID',
+  `activity_id` bigint unsigned NOT NULL COMMENT '活动ID',
+  `goods_id` bigint unsigned NOT NULL COMMENT '商品ID',
+  `seckill_goods_id` bigint unsigned NOT NULL COMMENT '秒杀商品ID',
+  `message_body` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '下单消息体JSON(补偿重发的数据源)',
+  `status` tinyint NOT NULL DEFAULT '0' COMMENT '补偿状态(0:待重试 1:已补偿 2:待人工处理)',
+  `retry_count` int NOT NULL DEFAULT '0' COMMENT '已重发次数',
+  `fail_reason` varchar(512) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '最近一次失败原因',
+  `next_retry_time` datetime NOT NULL COMMENT '下次允许重发时间',
+  `is_deleted` tinyint NOT NULL DEFAULT '0' COMMENT '是否删除(0:未删除 1:已删除)',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uk_order_no` (`order_no`),
+  KEY `idx_status_next_retry` (`status`,`next_retry_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='秒杀订单发送失败补偿表';

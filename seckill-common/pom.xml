@@ -80,6 +80,12 @@
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
+        <!-- Spring Retry 重试框架 -->
+        <dependency>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
+        </dependency>
+
         <!-- Log4j2 日志框架（替代默认的 Logback） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

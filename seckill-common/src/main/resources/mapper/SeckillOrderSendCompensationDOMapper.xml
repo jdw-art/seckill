@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jacob.seckill.common.domain.mapper.SeckillOrderSendCompensationDOMapper">
+  <resultMap id="BaseResultMap" type="com.jacob.seckill.common.domain.dataobject.SeckillOrderSendCompensationDO">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="order_no" jdbcType="VARCHAR" property="orderNo" />
+    <result column="user_id" jdbcType="BIGINT" property="userId" />
+    <result column="activity_id" jdbcType="BIGINT" property="activityId" />
+    <result column="goods_id" jdbcType="BIGINT" property="goodsId" />
+    <result column="seckill_goods_id" jdbcType="BIGINT" property="seckillGoodsId" />
+    <result column="message_body" jdbcType="LONGVARCHAR" property="messageBody" />
+    <result column="status" jdbcType="TINYINT" property="status" />
+    <result column="retry_count" jdbcType="INTEGER" property="retryCount" />
+    <result column="fail_reason" jdbcType="VARCHAR" property="failReason" />
+    <result column="next_retry_time" jdbcType="TIMESTAMP" property="nextRetryTime" />
+    <result column="is_deleted" jdbcType="TINYINT" property="isDeleted" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, order_no, user_id, activity_id, goods_id, seckill_goods_id, message_body,
+    `status`, retry_count, fail_reason, next_retry_time, is_deleted, create_time, update_time
+  </sql>
+  <!-- 按订单号查询补偿记录 -->
+  <select id="selectByOrderNo" resultMap="BaseResultMap">
+    SELECT
+    <include refid="Base_Column_List"/>
+    FROM t_seckill_order_send_compensation
+    WHERE order_no = #{orderNo} AND is_deleted = 0
+  </select>
+  <insert id="insert" parameterType="com.jacob.seckill.common.domain.dataobject.SeckillOrderSendCompensationDO" useGeneratedKeys="true" keyProperty="id">
+    insert into t_seckill_order_send_compensation (order_no, user_id,
+      activity_id, goods_id, seckill_goods_id,
+      `status`, retry_count, fail_reason,
+      next_retry_time, is_deleted, create_time,
+      update_time, message_body)
+    values (#{orderNo,jdbcType=VARCHAR}, #{userId,jdbcType=BIGINT},
+      #{activityId,jdbcType=BIGINT}, #{goodsId,jdbcType=BIGINT}, #{seckillGoodsId,jdbcType=BIGINT},
+      #{status,jdbcType=TINYINT}, #{retryCount,jdbcType=INTEGER}, #{failReason,jdbcType=VARCHAR},
+      #{nextRetryTime,jdbcType=TIMESTAMP}, 0, now(),
+      now(), #{messageBody,jdbcType=LONGVARCHAR})
+  </insert>
+  <!-- 查询可重发的待重试记录 -->
+  <select id="selectPendingList" resultMap="BaseResultMap">
+    SELECT
+    <include refid="Base_Column_List" />
+    FROM t_seckill_order_send_compensation
+    WHERE status = 0 AND is_deleted = 0 AND next_retry_time &lt;= #{now}
+    ORDER BY next_retry_time ASC
+    LIMIT #{limit}
+  </select>
+  <!-- 按订单号更新补偿状态 -->
+  <update id="updateStatusByOrderNo">
+    UPDATE t_seckill_order_send_compensation
+    SET status = #{status}
+    WHERE order_no = #{orderNo} AND is_deleted = 0
+  </update>
+  <!-- 按订单号更新重试计划 -->
+  <update id="updateRetryPlan">
+    UPDATE t_seckill_order_send_compensation
+    SET retry_count = #{retryCount}, next_retry_time = #{nextRetryTime}, fail_reason = #{failReason}
+    WHERE order_no = #{orderNo} AND is_deleted = 0
+  </update>
+</mapper>

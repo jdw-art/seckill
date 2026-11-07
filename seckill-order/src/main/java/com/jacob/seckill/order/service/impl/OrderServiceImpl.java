@@ -248,10 +248,19 @@ public class OrderServiceImpl implements OrderService {
         saveOrderStatus(userId, orderNo, OrderStatusEnum.PROCESSING.getStatus());
 
         // 9. 发送 MQ，内部会携带 CorrelationData(orderNo)，方便生产者确认回调定位消息
-        boolean isSendSuccess = seckillOrderMessageSender.send(seckillOrderMqDTO);
+        // Spring Retry 重试耗尽后，异常由 SeckillOrderMessageSender 的 @Recover 兜底接住
+        // 失败消息会被登记到补偿表，由补偿任务重发
+        boolean isSendSuccess;
+        try {
+            isSendSuccess = seckillOrderMessageSender.send(seckillOrderMqDTO);
+        } catch (Exception e) {
+            // 多次重试后，仍发送失败
+            log.error("==> 秒杀下单消息发送失败, orderNo: {}", orderNo, e);
+            isSendSuccess = false;
+        }
 
         if (!isSendSuccess) {
-            log.warn("==> 秒杀下单消息发送结果未知，订单保持处理中等待后续确认, orderNo: {}", orderNo);
+            log.warn("==> 秒杀下单消息发送失败, 已进入补偿链路, 订单保持处理中, orderNo: {}", orderNo);
         }
 
         log.info("==> 秒杀下单消息已发送至 MQ, orderNo: {}, userId: {}, activityId: {}, goodsId: {}",
